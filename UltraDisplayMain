@@ -1,0 +1,99 @@
+// Define which Arduino pins the ultrasonic sensor uses
+const int trigPin = 9;   // TRIG sends a signal to start measuring distance
+const int echoPin = 10;  // ECHO receives the return signal from the sensor
+
+
+// setup() runs ONCE when the Arduino is powered on or reset
+void setup() {
+
+  // Start serial communication at 9600 bits per second
+  // This allows us to see measurements in the Serial Monitor
+  Serial.begin(9600);
+
+  // Set TRIG as an OUTPUT because Arduino sends a signal to the sensor
+  pinMode(trigPin, OUTPUT);
+
+  // Set ECHO as an INPUT because Arduino receives a signal from the sensor
+  pinMode(echoPin, INPUT);
+
+  // Make sure TRIG starts in the LOW (OFF) state
+  digitalWrite(trigPin, LOW);
+}
+
+
+// loop() runs continuously while the Arduino is powered on
+void loop() {
+
+  // STEP 1: Make sure TRIG is LOW before sending a new pulse
+  digitalWrite(trigPin, LOW);
+
+  // Wait 5 microseconds to ensure the signal is LOW
+  delayMicroseconds(5);
+
+
+  // STEP 2: Send a trigger pulse to the ultrasonic sensor
+
+  // Set TRIG HIGH to begin the pulse
+  digitalWrite(trigPin, HIGH);
+
+  // Keep TRIG HIGH for 10 microseconds
+  // The HC-SR04 requires a pulse of at least 10 microseconds
+  delayMicroseconds(10);
+
+  // Set TRIG LOW to finish the pulse
+  // The sensor now sends out ultrasonic sound
+  digitalWrite(trigPin, LOW);
+
+
+  // STEP 3: Measure how long the echo signal stays HIGH
+
+  // pulseIn() measures the HIGH pulse duration in microseconds
+  // It waits up to 60,000 microseconds (60 milliseconds)
+  // If no complete pulse is detected, it returns 0
+  unsigned long duration = pulseIn(echoPin, HIGH, 60000UL);
+
+
+  // STEP 4: Print the measured echo duration
+
+  Serial.print("Echo duration: ");
+  Serial.println(duration);
+
+
+  // STEP 5: Check whether the sensor detected an echo
+
+  if (duration > 0) {
+
+    // The sensor detected a pulse, so calculate the distance
+
+    // Speed of sound is approximately 0.0343 cm per microsecond
+    // Multiply duration by speed to calculate total travel distance
+    // Divide by 2 because sound travels TO the object and BACK
+
+    float distance = (duration * 0.0343) / 2.0;
+
+
+    // STEP 6: Display the calculated distance in Serial Monitor
+
+    Serial.print("Distance: ");
+
+    // Print the distance rounded to 2 decimal places
+    Serial.print(distance, 2);
+
+    Serial.println(" cm");
+
+  } else {
+
+    // If duration equals 0, the Arduino did not detect an echo pulse
+    // This could happen because of incorrect wiring,
+    // a timeout, or a problem with the sensor
+
+    Serial.println("No echo detected!");
+  }
+
+
+  // STEP 7: Wait before taking another measurement
+
+  // 500 milliseconds = 0.5 seconds
+  // This prevents measurements from happening too quickly
+  delay(500);
+}
